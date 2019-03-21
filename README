@@ -1,0 +1,114 @@
+This code is largely based on CUDA samples v9.2 (also works for CUDA 9,9.1)
+
+To use the modified code install CUDA samples first and make sure you can compile and execute CUDA samples.
+Navigate to the 5-Simulations/nbody folder and replace the sample files with the provided files
+
+Once compiled, you can launch a simulation with
+nbody.exe -numbodies=<number of bodies to simulate>
+Then press 1, 2 or 3 to load the JANUS simulation parameters.
+
+The simulation Initial conditions parameters are coded into the file bodysystem.h
+Tune the masses, velocites and repartition as you want (spherical, cubic, else) 
+For example, to tune masses repartitions the code is:
+				if (i % 64 == 0) //64 1 negative mass in 63 positive masses, i % 2 == 0 makes 50/50
+				{
+					pos[p++] = -63.0f; // mass - 
+				}
+				else
+				{
+					pos[p++] = 1.0f; // mass +
+				}
+       
+At the end of the bodysystem.h file you'll find the parameters to assign colors depending on the sign of the mass.
+Greenish = negative
+Red = positive
+
+The NVIDIA GPU Gems all-pair algorithm modification is quite tiny:
+
+Original CUDA SAMPLE:
+    // r_ij  [3 FLOPS]
+    r.x = bj.x - bi.x;
+    r.y = bj.y - bi.y;
+    r.z = bj.z - bi.z;
+    // distSqr = dot(r_ij, r_ij) + EPS^2  [6 FLOPS]
+    T distSqr = r.x * r.x + r.y * r.y + r.z * r.z;
+    distSqr += getSofteningSquared<T>();
+    // invDistCube =1/distSqr^(3/2)  [4 FLOPS (2 mul, 1 sqrt, 1 inv)]
+    T invDist = rsqrt_T(distSqr);
+    T invDistCube =  invDist * invDist * invDist;
+	// s = m_j * invDistCube [1 FLOP]
+	T s = bj.w * invDistCube;
+			ai.x += r.x * s ; 
+			ai.y += r.y * s ;
+			ai.z += r.z * s  ;
+		
+    
+Modified SAMPLE for JANUS code:
+    // r_ij  [3 FLOPS]
+    r.x = bj.x - bi.x;
+    r.y = bj.y - bi.y;
+    r.z = bj.z - bi.z;
+    // distSqr = dot(r_ij, r_ij) + EPS^2  [6 FLOPS]
+    T distSqr = r.x * r.x + r.y * r.y + r.z * r.z;
+    distSqr += getSofteningSquared<T>();
+    // invDistCube =1/distSqr^(3/2)  [4 FLOPS (2 mul, 1 sqrt, 1 inv)]
+    T invDist = rsqrt_T(distSqr);
+    T invDistCube =  invDist * invDist * invDist;
+	// s = m_j * invDistCube [1 FLOP]
+	T s = bj.w * invDistCube;
+		if (bi.w < 0)
+		{
+			s = -s;
+			ai.x += r.x * s ; 
+			ai.y += r.y * s ;
+			ai.z += r.z * s ;
+		}
+		else
+		{
+			ai.x += r.x * s ; 
+			ai.y += r.y * s ;
+			ai.z += r.z * s  ;
+		}
+
+As you can see I just added a condition on the sign of bi.w particle (it doesn't work if you use bj.w, you just have a runaway effect)
+If the sign of bj.w is negative, then I change the sign of S, resulting in an opposite force and avoiding the runaway effect to simulate properly the Bi-Metric Janus Cosmological model
+
+The tipsy.h file also has been modified to load from text instead of gadget2 bin format
+The main cpp file also have been modified so that when you press the key assigned by NVIDIA to switch from FP32 to FP64 the current simulation parameters (positions and velocities) are dumped as text into a file named simcomplete.txt
+  
+  
+  NBodyDemo<T_old>::getArrays(oldPos, oldVel);
+	//Ecriture dans fichier
+	FILE *f = fopen("simcomplete.txt", "a");
+	if (f == NULL)
+	{
+		printf("Error opening file!\n");
+		exit(1);
+	}
+	float posx, posy, posz, mass, velx, vely, velz;
+	int invnumb = numBodies * 4;
+	//fprintf(f, "NOUVELLE ITERATION\n");
+	for (int i = 0; i < invnumb; i = i + 4) {
+		posx = oldPos[i];//position x
+		posy= oldPos[i+1];
+		posz= oldPos[i+2];
+		mass= oldPos[i+3];
+		velx= oldVel[i];
+		vely= oldVel[i+1];
+		velz= oldVel[i+2];
+		fprintf(f, "%f %f %f %f %f %f %f\n", posx, posy, posz,mass,velx,vely,velz);
+
+	}
+	//fprintf(f, "VELOCITE\n");
+	//for (int i = 0; i <= invnumb; i++) {
+	//
+	//	vel = oldVel[i]; //velocité
+	//	fprintf(f, "%f ", pos);
+	//	if (i % 4) {
+	//		fprintf(f, "\n");
+	//	}
+	//}
+	fclose(f);
+
+
+
