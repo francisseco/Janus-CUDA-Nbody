@@ -1,5 +1,9 @@
 This code is largely based on CUDA samples v9.2 (also works for CUDA 9,9.1)
 
+In windows I can't go above 350k Particles or the app crashes. Tried it on 1050ti and 1080ti.
+Works better on Linux. Used it on ubuntu 14 and 16 where I can go up to 10 million particles. On 1080ti I reach 7.5TFLOPS, 1.5 on 1050ti.
+
+
 To use the modified code install CUDA samples first and make sure you can compile and execute CUDA samples.
 Navigate to the 5-Simulations/nbody folder and replace the sample files with the provided files
 
