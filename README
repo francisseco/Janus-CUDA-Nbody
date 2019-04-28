@@ -9,7 +9,16 @@ Navigate to the 5-Simulations/nbody folder and replace the sample files with the
 
 Once compiled, you can launch a simulation with
 nbody.exe -numbodies=<number of bodies to simulate>
-Then press 1, 2 or 3 to load the JANUS simulation parameters.
+Then press 1, 2 or 3 to load the JANUS simulation parameters. 
+
+The sliders are real-time adjustable parameters provided by NVIDIA CUDA Samples. I usually run the simualtions with:
+Velocity Damping = 0.98 or 0.99 (you lose 1% or 2% velocity each iterations, simulates friction)
+Softening factor = 0.7 it's an introduced error factor, mandatory in non collisional simulations such as this
+Time step is just the Delta between each iterations. The higher the more errors are introduced
+The following two parameters only affect the ICs, moving it during sims won't change a thing.
+Cluster scale, allows to change the initial condition "density" so to speak applying a factor to the ICs.
+VVelocity scale, another factor to apply to IC point velocities. If initial velocity is 0, this parameter have no effect.
+
 
 The simulation Initial conditions parameters are coded into the file bodysystem.h
 Tune the masses, velocites and repartition as you want (spherical, cubic, else) 
