@@ -178,7 +178,7 @@ void randomizeBodies(NBodyConfig config, T *pos, T *vel, float *color, float clu
 
 				if (i % 64 == 0) //64
 				{
-					pos[p++] = -3969.0f; // mass -
+					pos[p++] = -63.0f; // mass -
 				}
 				else
 				{
@@ -262,7 +262,7 @@ void randomizeBodies(NBodyConfig config, T *pos, T *vel, float *color, float clu
 				pos[p++] = point.z * scale; // pos.z
 				if (i % 64 == 0) //64
 				{
-					pos[p++] = -3969.0f; // mass -
+					pos[p++] = -63.0f; // mass -
 
 
 				}
@@ -320,7 +320,7 @@ void randomizeBodies(NBodyConfig config, T *pos, T *vel, float *color, float clu
 
 				if (i % 64 == 0) //64
 				{
-					pos[p++] = -3969.0f; // mass -
+					pos[p++] = -63.0f; // mass -
 				}
 				else
 				{
